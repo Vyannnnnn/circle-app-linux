@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  id        Int      @id @default(autoincrement())
+  username  String @unique
+  full_Name String
+  email     String   @unique
+  password  String
+  photo_profile String
+  bio       String
+  createdAt DateTime @default(now())  
+  updatedAt DateTime @updatedAt
+
+  following following[] @relation("FollowingRelation")
+  followers following[] @relation("FollowerRelation")
+  likes likes[] @relation("LikesRelation")
+  created threads[] @relation("CreatedRelation")
+  createdLikes likes[] @relation("Created By")
+  replies replies[]
+
+}
+
+model following {
+  id        Int      @id @default(autoincrement())
+  following users @relation("FollowingRelation", fields: [followingId], references: [id])
+  followingId Int
+  follower users @relation("FollowerRelation", fields: [followerId], references: [id])
+  followerId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model likes {
+  id        Int      @id @default(autoincrement())
+  author threads @relation(fields: [threadId], references: [id])
+  threadId    Int
+  likes users @relation("LikesRelation", fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+  created users @relation("Created By", fields: [createdBy], references: [username])
+  createdBy String
+  updatedBy String
+  updatedAt DateTime @updatedAt
+}
+
+model threads {
+  id        Int      @id @default(autoincrement())
+  content   String
+  image     String
+  createdAt DateTime @default(now())
+  createdBy String
+  created users @relation("CreatedRelation", fields: [createdBy], references: [username])
+  updatedAt DateTime @updatedAt
+  updatedBy String
+
+  likes likes[]
+  thread replies[] @relation("ThreadRelation")
+}
+
+model replies {
+  id        Int      @id @default(autoincrement())
+  author    users @relation(fields: [userId], references: [id])
+  userId    Int
+  thread    threads @relation("ThreadRelation", fields: [threadId], references: [id])
+  threadId  Int
+  image     String
+  content   String
+  createdAt DateTime @default(now())
+  createdBy String
+  updatedAt DateTime @updatedAt
+  updatedBy String
+
+} 
