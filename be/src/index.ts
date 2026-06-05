@@ -1,11 +1,34 @@
-import express from 'express'
+import express, { Request, Response, NextFunction } from "express";
+import "dotenv/config";
+import mainRoute from "./routes/index";
+import { env } from "process";
+import cors from "cors";
 
-const app = express()
+const app = express();
+const PORT = env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello World')
-})
+app.use(cors());
+app.use(express.json());
 
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000')
-})
+app.use("/", mainRoute);
+
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// 404 handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

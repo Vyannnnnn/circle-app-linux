@@ -4,13 +4,13 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
+
 
 model users {
   id        Int      @id @default(autoincrement())
@@ -18,8 +18,8 @@ model users {
   full_Name String
   email     String   @unique
   password  String
-  photo_profile String
-  bio       String
+  photo_profile String?
+  bio       String?
   createdAt DateTime @default(now())  
   updatedAt DateTime @updatedAt
 
@@ -40,6 +40,7 @@ model following {
   followerId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@unique([followingId, followerId])
 }
 
 model likes {
@@ -53,12 +54,14 @@ model likes {
   createdBy String
   updatedBy String
   updatedAt DateTime @updatedAt
+  @@unique([threadId, userId])
 }
 
 model threads {
   id        Int      @id @default(autoincrement())
   content   String
-  image     String
+  image    String?
+  likesCount Int @default(0)
   createdAt DateTime @default(now())
   createdBy String
   created users @relation("CreatedRelation", fields: [createdBy], references: [username])
