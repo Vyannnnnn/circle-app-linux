@@ -3,22 +3,17 @@ import { ReplyIcon, DotsHIcon, HeartIcon, VerifyBadge } from "./icons/svgIcons";
 import { Button } from "@/components/ui/button";
 import { getImageUrl } from "../services/api";
 import { Link } from "react-router";
-import { useNavigate } from "react-router";
 
-export default function PostCard({
+export default function DetailPostCard({
   thread,
   onLike,
 }: {
   thread: Thread;
   onLike: (id: number) => void;
 }) {
-  const navigate = useNavigate();
   return (
-    // <Link to={`/threads/${thread.id}`} className="no-underline cursor-pointer">
-    <article
-      onClick={() => navigate(`/threads/${thread.id}`)}
-      className="flex gap-3 px-4 py-3 border-b border-[#2f3336] hover:bg-[#080808] transition-colors"
-    >
+    <Link to={`/thread/${thread.id}`} className="no-underline cursor-pointer">
+    <article className="flex gap-3 px-4 py-3 border-b border-[#2f3336] hover:bg-[#080808] transition-colors">
       <img
         src={getImageUrl(thread.user.photo_profile) || ""}
         alt={thread.user.full_Name}
@@ -34,12 +29,7 @@ export default function PostCard({
           <span className="text-[#71767b] text-[15px]">
             @{thread.user.username}
           </span>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="ml-auto p-1.5 cursor-pointer rounded-full hover:bg-[#031018] hover:text-[#1d9bf0] text-[#71767b] transition-colors"
-          >
+          <Button className="ml-auto p-1.5 cursor-pointer rounded-full hover:bg-[#031018] hover:text-[#1d9bf0] text-[#71767b] transition-colors">
             <DotsHIcon />
           </Button>
         </div>
@@ -58,18 +48,15 @@ export default function PostCard({
           </div>
         )}
         <div className="flex gap-x-4 max-w-106.25">
-          <div className="flex  items-center gap-1.5 cursor-pointer text-[#71767b] hover:text-[#1d9bf0] group transition-colors text-[13px]">
+          <Button className="flex  items-center gap-1.5 cursor-pointer text-[#71767b] hover:text-[#1d9bf0] group transition-colors text-[13px]">
             <span className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-[#031018] transition-colors">
               <ReplyIcon />
             </span>
             {thread.replies}
-          </div>
+          </Button>
 
           <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onLike(thread.id);
-            }}
+            onClick={() => onLike(thread.id)}
             className={`flex items-center gap-1.5 text-[13px] transition-colors cursor-pointer ${
               thread.isLiked
                 ? "text-[#f91880]"
@@ -86,6 +73,6 @@ export default function PostCard({
         </div>
       </div>
     </article>
-    // </Link>
+    </Link>
   );
 }

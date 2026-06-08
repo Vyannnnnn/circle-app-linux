@@ -2,15 +2,20 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { threadAPI } from "../../services/api";
 import type { Thread } from "../../types/thread.types";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Replie } from "@/types/replie.types";
 
 interface ThreadState {
   threads: Thread[];
+  selectedThread: Thread | null;
+  replies: Replie[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: ThreadState = {
   threads: [],
+  selectedThread: null,
+  replies: [],
   loading: false,
   error: null,
 };
@@ -30,6 +35,34 @@ export const fetchThreads = createAsyncThunk(
   },
 );
 
+export const fetchThreadById = createAsyncThunk(
+  "threads/:threadId",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const res = await threadAPI.getThreadById(id);
+      return res.data.data.formattedThread;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch thread details",
+      );
+    }
+  },
+);
+
+export const fetchRepliesByThreadId = createAsyncThunk(
+  "threads/:threadId/replies",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const res = await threadAPI.getRepliesByThreadId(id);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch thread details",
+      );
+    }
+  },
+);
+
 export const likeThread = createAsyncThunk(
   "threads/like",
   async (id: number, { rejectWithValue }) => {
@@ -38,6 +71,19 @@ export const likeThread = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to like thread",
+      );
+    }
+  },
+);
+
+export const unlikeThread = createAsyncThunk(
+  "threads/unlike",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await threadAPI.unlikeThread(id);
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to unlike thread",
       );
     }
   },
@@ -64,7 +110,6 @@ const threadSlice = createSlice({
   reducers: {
     toggleLike: (state, action: PayloadAction<number>) => {
       const thread = state.threads.find((t) => t.id === action.payload);
-      
 
       if (!thread) return;
 
@@ -73,12 +118,25 @@ const threadSlice = createSlice({
       thread.like = wasLiked ? thread.like - 1 : thread.like + 1;
       thread.isLiked = !wasLiked;
     },
+    toggleLikeSelected: (state) => {
+      if (!state.selectedThread) return;
+
+      const wasLiked = state.selectedThread.isLiked;
+
+      state.selectedThread.like = wasLiked
+        ? state.selectedThread.like - 1
+        : state.selectedThread.like + 1;
+      state.selectedThread.isLiked = !wasLiked;
+    },
     hydrateThreads: (state, action: PayloadAction<Thread[]>) => {
       state.threads = action.payload;
     },
     addThread: (state, action: PayloadAction<Thread>) => {
       state.threads.unshift(action.payload);
-    }
+    },
+    clearSelectedThread: (state) => {
+      state.selectedThread = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -95,9 +153,28 @@ const threadSlice = createSlice({
       })
       .addCase(createThread.fulfilled, (state, action) => {
         // state.threads.unshift(action.payload);
+      })
+      .addCase(fetchThreadById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchThreadById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedThread = action.payload;
+      })
+      .addCase(fetchThreadById.rejected, (state) => {
+        state.loading = false;
+        // state.error = action.payload as string;
+      })
+      .addCase(fetchRepliesByThreadId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.replies = action.payload;
       });
+    //  .addCase(likeThread.rejected, (state, action) => {
+    //   state.error = action.payload as string;
+    // });
   },
 });
 
 export default threadSlice.reducer;
-export const { toggleLike, hydrateThreads, addThread } = threadSlice.actions;
+export const { toggleLike, hydrateThreads, addThread, toggleLikeSelected, clearSelectedThread } =
+  threadSlice.actions;

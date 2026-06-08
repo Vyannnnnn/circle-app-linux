@@ -5,22 +5,22 @@ import Home from "./page/Home";
 import PrivateRoute from "./components/PrivateRoute";
 import Tes from "./components/tes/Tes";
 import { Toaster } from "sonner";
+import DetailThread from "./page/DetailThread";
 
 function App() {
   return (
     <>
       <Toaster position="top-right" richColors />
-    <Routes>
-      <Route element={<PrivateRoute />}>
-        <Route path="/" element={<Home />} />
-      </Route>
-
-      <Route path="/tes" element={<Tes />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<Login />} />
-    </Routes>
-
+      <Routes>
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<Home />} />
+        </Route>
+        <Route path="/threads/:threadId" element={<DetailThread />} />
+        <Route path="/tes" element={<Tes />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<Login />} />
+      </Routes>
     </>
   );
 }

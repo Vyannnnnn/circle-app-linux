@@ -67,7 +67,8 @@ export const authAPI = {
 
 export const threadAPI = {
   getThreads: () => api.get("/threads/lists"),
-  // getThreadById: (id: number) => api.get(`/threads/${id}`),
+  getThreadById: (id: number) => api.get(`/threads/${id}`),   
+  getRepliesByThreadId: (threadId: number) => api.get(`/threads/${threadId}/replies`),
   createThread: (data: FormData) => api.post("/threads/create", data),
   likeThread: (id: number) => api.post(`/threads/${id}/like`),
   unlikeThread: (id: number) => api.post(`/threads/${id}/unlike`),
