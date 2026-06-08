@@ -16,7 +16,7 @@ export default function Register() {
     confirmPassword: "",
   });
 
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     // Validation
     if (!formData.username.trim()) {
@@ -57,9 +57,10 @@ export default function Register() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
-    if (formData.password && formData.password.length < 8) {
-      newErrors.password =
-        "Password is required and must be at least 8 characters";
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm password is required";

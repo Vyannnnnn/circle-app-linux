@@ -5,6 +5,7 @@ export interface TokenPayload {
   id: number;
   username: string;
   email: string;
+  photo_profile?: string | null;
 }
 
 const JWT_SECRET: string = env.JWT_SECRET || "your-secret-key-here";

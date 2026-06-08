@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { threadAPI } from "../../services/api";
 import type { Thread } from "../../types/thread.types";
+import type { PayloadAction } from "@reduxjs/toolkit";
 
 interface ThreadState {
   threads: Thread[];
@@ -42,16 +43,28 @@ export const likeThread = createAsyncThunk(
   },
 );
 
+export const createThread = createAsyncThunk(
+  "threads/create",
+  async (payload: FormData, { rejectWithValue }) => {
+    try {
+      const res = await threadAPI.createThread(payload);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to create thread",
+      );
+    }
+  },
+);
+
 const threadSlice = createSlice({
   name: "thread",
   initialState,
 
   reducers: {
-    toggleLike: (state, action) => {
+    toggleLike: (state, action: PayloadAction<number>) => {
       const thread = state.threads.find((t) => t.id === action.payload);
-      //  console.log("toggleLike reducer", action.payload);
-
-      console.log("before",thread?.like, thread?.isLiked);
+      
 
       if (!thread) return;
 
@@ -59,12 +72,13 @@ const threadSlice = createSlice({
 
       thread.like = wasLiked ? thread.like - 1 : thread.like + 1;
       thread.isLiked = !wasLiked;
-      console.log("before",thread?.like, thread?.isLiked);
-
     },
-    hydrateThreads: (state, action) => {
+    hydrateThreads: (state, action: PayloadAction<Thread[]>) => {
       state.threads = action.payload;
     },
+    addThread: (state, action: PayloadAction<Thread>) => {
+      state.threads.unshift(action.payload);
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -78,9 +92,12 @@ const threadSlice = createSlice({
       .addCase(fetchThreads.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(createThread.fulfilled, (state, action) => {
+        // state.threads.unshift(action.payload);
       });
   },
 });
 
 export default threadSlice.reducer;
-export const { toggleLike, hydrateThreads } = threadSlice.actions;
+export const { toggleLike, hydrateThreads, addThread } = threadSlice.actions;

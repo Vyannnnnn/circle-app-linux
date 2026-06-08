@@ -21,40 +21,30 @@ export const getThreadLists = async (
         createdAt: "desc",
       },
       include: {
-        created: {
-          select: {
-            id: true,
-            username: true,
-            full_Name: true,
-            photo_profile: true,
-          },
-        },
-        likes: true,
-        thread: true,
+        user: true,
+        likes: true,  
+        replies: true,
       },
     });
 
     const formattedThreadLists = threadLists.map((thread) => {
-      const likesCount = thread.likes.length;
-      const repliesCount = thread.thread.length;
-      const isLiked = thread.likes.some(
-        (like) => like.userId === currentUserId,
-      );
-
       return {
         id: thread.id,
         content: thread.content,
+        image: thread.image,
         createdAt: thread.createdAt,
+
         user: {
-          id: thread.created.id,
-          username: thread.created.username,
-          full_Name: thread.created.full_Name,
-          photo_profile: thread.created.photo_profile,
+          id: thread.user.id,
+          username: thread.user.username,
+          full_Name: thread.user.full_Name,
+          photo_profile: thread.user.photo_profile,
         },
-        created_at: thread.createdAt.toISOString(),
-        like: likesCount,
-        replies: repliesCount,
-        isLiked: isLiked,
+
+        like: thread.likes.length,
+        replies: thread.replies.length,
+
+        isLiked: thread.likes.some((like) => like.userId === currentUserId),
       };
     });
 

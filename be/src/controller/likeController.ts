@@ -48,8 +48,6 @@ export const likeThread = async (
       data: {
         userId: userId,
         threadId: parsedThreadId,
-        createdBy: req.user.username,
-        updatedBy: req.user.username,
       },
     });
 

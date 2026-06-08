@@ -156,6 +156,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       id: user.id,
       username: user.username,
       email: user.email,
+      photo_profile: user.photo_profile,
     };
     const token = generateToken(tokenPayload);
 
@@ -167,9 +168,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         username: user.username,
         email: user.email,
         full_Name: user.full_Name,
+        photo_profile: user.photo_profile,
       },
       token,
     });
+
+    console.log("user:", user);
+    console.log("password input:", password);
+    console.log("hashed password:", user?.password);
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({

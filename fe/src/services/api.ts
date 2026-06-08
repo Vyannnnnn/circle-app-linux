@@ -6,23 +6,32 @@ import { store } from "../redux/store";
 
 const api = axios.create({
   baseURL: "http://localhost:3000",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  // set JSON hanya kalau bukan FormData
+  if (!(config.data instanceof FormData)) {
+    config.headers["Content-Type"] = "application/json";
+  }
+  return config;
+});
+
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem("token");
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   },
+// );
 
 api.interceptors.response.use(
   (response) => response,
@@ -52,16 +61,22 @@ export const authAPI = {
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    // store.dispatch(logout()); 
+    // store.dispatch(logout());
   },
 };
 
 export const threadAPI = {
   getThreads: () => api.get("/threads/lists"),
   // getThreadById: (id: number) => api.get(`/threads/${id}`),
-  // createThread: (data: { content: string }) => api.post("/threads", data),
+  createThread: (data: FormData) => api.post("/threads/create", data),
   likeThread: (id: number) => api.post(`/threads/${id}/like`),
   unlikeThread: (id: number) => api.post(`/threads/${id}/unlike`),
+};
+
+export const getImageUrl = (path: string | null) => {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `http://localhost:3000${path}`;
 };
 
 export default api;

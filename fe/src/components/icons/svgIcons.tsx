@@ -116,7 +116,7 @@ export const VerifyBadge = () => (
   </svg>
 );
 
-export const MediaIcon = () => () => (
+export const MediaIcon = () => (
   <svg
     viewBox="0 0 24 24"
     fill="none"

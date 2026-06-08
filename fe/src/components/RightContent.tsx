@@ -19,7 +19,7 @@ export default function RightContent() {
           </svg>
           <input
             type="text"
-            placeholder="Cari"
+            placeholder="Search"
             className="bg-transparent border-none outline-none text-[#e7e9ea] placeholder-[#71767b] text-[15px] flex-1"
           />
         </div>
@@ -28,42 +28,41 @@ export default function RightContent() {
       {/* Premium */}
       <div className="bg-[#16181c] rounded-2xl p-4 mb-4">
         <h2 className="text-xl font-bold text-[#e7e9ea] mb-2">
-          Berlangganan Premium
+          Subscribe X Premium
         </h2>
         <p className="text-[15px] text-[#71767b] mb-4 leading-snug">
-          Buka kunci fitur baru dan jika memenuhi syarat, dapatkan pembagian
-          pendapatan iklan.
+          Unlock new features and if eligible, get split advertising revenue.
         </p>
         <Button className="bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white font-bold text-[15px] rounded-full px-5 h-9 transition-colors">
-          Berlangganan
+          Subscribe
         </Button>
       </div>
 
       {/* Trending */}
       <div className="bg-[#16181c] rounded-2xl p-4 mb-4">
         <h2 className="text-xl font-bold text-[#e7e9ea] mb-4">
-          Trending untuk Anda
+          Trending for You
         </h2>
         {[
           {
             cat: "Trending · Horror",
             name: "#HorrorShorts",
-            count: "24,5 rb postingan",
+            count: "24,5 rb posts",
           },
           {
-            cat: "Hiburan · Trending",
+            cat: "Entertainment · Trending",
             name: "The Conjuring 4",
-            count: "18,2 rb postingan",
+            count: "18,2 rb posts",
           },
           {
-            cat: "Trending di Indonesia",
+            cat: "Trending in Indonesia",
             name: "#TikTokHorror",
-            count: "9.440 postingan",
+            count: "9.440 posts",
           },
           {
-            cat: "Teknologi · Trending",
+            cat: "Technology · Trending",
             name: "YouTube Shorts",
-            count: "42,1 rb postingan",
+            count: "42,1 rb posts",
           },
         ].map((t) => (
           <div
@@ -83,15 +82,13 @@ export default function RightContent() {
           </div>
         ))}
         <Button className="text-[#1d9bf0] text-[15px] pt-4 hover:underline block">
-          Tampilkan lebih banyak
+          Show more
         </Button>
       </div>
 
       {/* Who to follow */}
       <div className="bg-[#16181c] rounded-2xl p-4 mb-4">
-        <h2 className="text-xl font-bold text-[#e7e9ea] mb-4">
-          Siapa yang harus diikuti
-        </h2>
+        <h2 className="text-xl font-bold text-[#e7e9ea] mb-4">Who to follow</h2>
         {[
           {
             initials: "FK",
@@ -120,7 +117,7 @@ export default function RightContent() {
             className="flex items-center gap-3 py-3 hover:bg-[#1d1f23] -mx-4 px-4 cursor-pointer transition-colors"
           >
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
               style={{ background: u.bg, color: u.color }}
             >
               {u.initials}
@@ -131,25 +128,25 @@ export default function RightContent() {
               </p>
               <p className="text-[#71767b] text-[15px] truncate">@{u.handle}</p>
             </div>
-            <Button className="border border-[#e7e9ea] text-[#e7e9ea] hover:bg-[#e7e9ea] hover:text-black font-bold text-[14px] rounded-full px-4 h-8 transition-colors flex-shrink-0">
-              Ikuti
+            <Button className="border border-[#e7e9ea] text-[#e7e9ea] hover:bg-[#e7e9ea] hover:text-black font-bold text-[14px] rounded-full px-4 h-8 transition-colors shrink-0">
+              Follow
             </Button>
           </div>
         ))}
         <Button className="text-[#1d9bf0] text-[15px] pt-4 hover:underline block">
-          Tampilkan lebih banyak
+          Show more
         </Button>
       </div>
 
       {/* Footer */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 pb-4 text-[13px] text-[#71767b]">
         {[
-          "Persyaratan Layanan",
-          "Kebijakan Privasi",
-          "Kebijakan Cookie",
-          "Aksesibilitas",
-          "Iklan info",
-          "Lainnya ···",
+          "Terms of Service",
+          "Privacy Policy",
+          "Cookie Policy",
+          "Accessibility",
+          "Ad info",
+          "More ···",
         ].map((l) => (
           <Button key={l} className="hover:underline">
             {l}
@@ -158,33 +155,5 @@ export default function RightContent() {
         <span>© 2026 X Corp.</span>
       </div>
     </aside>
-
-    // <aside className="w-[350px] hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto px-4 py-0 flex-shrink-0">
-    //   <div className="bg-gray-900 rounded-xl p-4">
-    //     <h2 className="text-xl font-bold mb-2">Berlangganan X Premium</h2>
-    //     <p className="text-sm text-gray-400 mb-3">
-    //       Berlangganan untuk membuka badge, monetisasi, dan fitur lain.
-    //     </p>
-    //     <Button className="bg-blue-500 hover:bg-blue-600 rounded-full">
-    //       Berlangganan
-    //     </Button>
-    //   </div>
-
-    //   {/* Trending */}
-    //   <div className="bg-gray-900 rounded-xl p-4">
-    //     <h2 className="text-xl font-bold mb-4">Trending untuk Anda</h2>
-    //     <div className="flex justify-between items-start mb-4">
-    //       <div>
-    //         <p className="text-xs text-gray-500">Trending di Indonesia</p>
-    //         <p className="font-bold">#Teknologi</p>
-    //         <p className="text-xs text-gray-500">12.5rb postingan</p>
-    //       </div>
-    //       <Button variant="ghost" size="sm">
-    //         ...
-    //       </Button>
-    //     </div>
-    //     {/* Tambahkan item trending lainnya */}
-    //   </div>
-    // </aside>
   );
 }

@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { loginUser, clearError } from "../redux/slices/authSlice";
 
 export default function Login() {
-  console.log("LOGIN RENDER");
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { loading, error, isAuthenticated } = useAppSelector(
@@ -16,7 +15,7 @@ export default function Login() {
     password: "",
   });
 
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     console.log("error", error);
@@ -58,25 +57,26 @@ export default function Login() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
-    // Validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Email is not valid";
     }
-    if (!formData.password) {
+
+    if (!formData.password.trim()) {
       newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     if (Object.keys(newErrors).length > 0) {
       setValidationErrors(newErrors);
       return;
     }
-console.log("SUBMIT CLICKED");
     // Dispatch login action
     const result = await dispatch(
       loginUser({
@@ -84,14 +84,10 @@ console.log("SUBMIT CLICKED");
         password: formData.password,
       }),
     );
-    console.log("dispatch result");
 
     if (result.type === loginUser.fulfilled.type) {
-      // Redirect handled by useEffect watching isAuthenticated
       navigate("/");
     }
-    console.log("Login submited");
-    console.log("Login result:", result);
   };
   return (
     <section className="bg-gray-50 dark:bg-gray-900">

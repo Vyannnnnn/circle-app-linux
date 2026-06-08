@@ -4,9 +4,12 @@ import Register from "./page/Register";
 import Home from "./page/Home";
 import PrivateRoute from "./components/PrivateRoute";
 import Tes from "./components/tes/Tes";
+import { Toaster } from "sonner";
 
 function App() {
   return (
+    <>
+      <Toaster position="top-right" richColors />
     <Routes>
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<Home />} />
@@ -17,6 +20,8 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<Login />} />
     </Routes>
+
+    </>
   );
 }
 

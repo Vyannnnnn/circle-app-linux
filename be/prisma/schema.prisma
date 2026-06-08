@@ -13,23 +13,21 @@ datasource db {
 
 
 model users {
-  id        Int      @id @default(autoincrement())
-  username  String @unique
-  full_Name String
-  email     String   @unique
-  password  String
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  full_Name     String
+  email         String    @unique
+  password      String
   photo_profile String?
-  bio       String?
-  createdAt DateTime @default(now())  
-  updatedAt DateTime @updatedAt
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  following following[] @relation("FollowingRelation")
-  followers following[] @relation("FollowerRelation")
-  likes likes[] @relation("LikesRelation")
-  created threads[] @relation("CreatedRelation")
-  createdLikes likes[] @relation("Created By")
-  replies replies[]
-
+  threads       threads[]
+  likes         likes[]
+  replies       replies[]
+  following     following[] @relation("FollowingRelation")
+  followers     following[] @relation("FollowerRelation")
 }
 
 model following {
@@ -45,44 +43,50 @@ model following {
 
 model likes {
   id        Int      @id @default(autoincrement())
-  author threads @relation(fields: [threadId], references: [id])
-  threadId    Int
-  likes users @relation("LikesRelation", fields: [userId], references: [id])
+
+  threadId  Int
+  thread    threads  @relation(fields: [threadId], references: [id])
+
   userId    Int
+  user      users    @relation(fields: [userId], references: [id])
+
   createdAt DateTime @default(now())
-  created users @relation("Created By", fields: [createdBy], references: [username])
-  createdBy String
-  updatedBy String
-  updatedAt DateTime @updatedAt
+
   @@unique([threadId, userId])
+  @@index([threadId])
 }
 
 model threads {
   id        Int      @id @default(autoincrement())
   content   String
-  image    String?
-  likesCount Int @default(0)
-  createdAt DateTime @default(now())
-  createdBy String
-  created users @relation("CreatedRelation", fields: [createdBy], references: [username])
-  updatedAt DateTime @updatedAt
-  updatedBy String
+  image     String?
 
-  likes likes[]
-  thread replies[] @relation("ThreadRelation")
+  userId    Int
+  user      users    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  likes     likes[]
+  replies   replies[]
+
+  @@index([userId])
 }
 
 model replies {
   id        Int      @id @default(autoincrement())
-  author    users @relation(fields: [userId], references: [id])
-  userId    Int
-  thread    threads @relation("ThreadRelation", fields: [threadId], references: [id])
-  threadId  Int
-  image     String
-  content   String
-  createdAt DateTime @default(now())
-  createdBy String
-  updatedAt DateTime @updatedAt
-  updatedBy String
 
-} 
+  content   String
+  image     String?
+
+  userId    Int
+  user      users    @relation(fields: [userId], references: [id])
+
+  threadId  Int
+  thread    threads  @relation(fields: [threadId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([threadId])
+}

@@ -3,12 +3,18 @@ import "dotenv/config";
 import mainRoute from "./routes/index";
 import { env } from "process";
 import cors from "cors";
+import path from "path";
+import { initWebSocket } from "./lib/websocket";
+import http from "http";
 
 const app = express();
+const server  = http.createServer(app);
+
 const PORT = env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/", mainRoute);
 
@@ -29,6 +35,8 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, () => {
+initWebSocket(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -5,6 +5,8 @@ interface User {
   id?: string;
   username?: string;
   email?: string;
+  photo_profile?: string;
+  full_Name?: string;
 }
 
 interface AuthState {
@@ -94,6 +96,8 @@ export const loginUser = createAsyncThunk(
         id: userData.id,
         username: userData.username,
         email: userData.email,
+        photo_profile: userData.photo_profile,
+        full_Name: userData.full_Name,
       };
 
       localStorage.setItem("token", token);
