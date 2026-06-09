@@ -47,7 +47,7 @@ export default function DetailPostCard({
             />
           </div>
         )}
-        <div className="flex gap-x-4 max-w-106.25">
+        <div className="flex gap-x-4 max-w-106.25 bg-red-500">
           <Button className="flex  items-center gap-1.5 cursor-pointer text-[#71767b] hover:text-[#1d9bf0] group transition-colors text-[13px]">
             <span className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-[#031018] transition-colors">
               <ReplyIcon />

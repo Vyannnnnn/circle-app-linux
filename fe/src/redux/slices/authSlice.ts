@@ -15,6 +15,10 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  selectedThread?: {
+    id: number;
+    like: number;
+  } | null;
 }
 
 const initialState: AuthState = {
@@ -146,6 +150,11 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    updateThreadLikes: (state, action) => {
+      if (state.selectedThread) {
+        state.selectedThread.like = action.payload;
+      } 
+    }
   },
   extraReducers: (builder) => {
     // Register

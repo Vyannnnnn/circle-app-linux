@@ -103,6 +103,24 @@ export const createThread = createAsyncThunk(
   },
 );
 
+export const createReply = createAsyncThunk(
+  "threads/createReply",
+  async (
+    { threadId, payload }: { threadId: number; payload: FormData },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await threadAPI.createReply(threadId, payload);
+      console.log("createReply response:", res.data);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to create reply",
+      );
+    }
+  },
+);
+
 const threadSlice = createSlice({
   name: "thread",
   initialState,
@@ -137,6 +155,11 @@ const threadSlice = createSlice({
     clearSelectedThread: (state) => {
       state.selectedThread = null;
     },
+    updateThreadLike: (state, action: PayloadAction<number>) => {
+      if (state.selectedThread) {
+        state.selectedThread.like = action.payload;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -166,9 +189,19 @@ const threadSlice = createSlice({
         // state.error = action.payload as string;
       })
       .addCase(fetchRepliesByThreadId.fulfilled, (state, action) => {
-        state.loading = false;
+        // state.loading = false;
         state.replies = action.payload;
+      })
+      .addCase(createReply.fulfilled, (state, action) => {
+        state.replies.unshift(action.payload.reply);
+        if (state.selectedThread) {
+          state.selectedThread.replies += 1;
+        }
       });
+    // .addCase(createThread.rejected, (state, action) => {
+    //   state.error = action.payload as string;
+    // })
+
     //  .addCase(likeThread.rejected, (state, action) => {
     //   state.error = action.payload as string;
     // });
@@ -176,5 +209,11 @@ const threadSlice = createSlice({
 });
 
 export default threadSlice.reducer;
-export const { toggleLike, hydrateThreads, addThread, toggleLikeSelected, clearSelectedThread } =
-  threadSlice.actions;
+export const {
+  toggleLike,
+  hydrateThreads,
+  addThread,
+  toggleLikeSelected,
+  clearSelectedThread,
+  updateThreadLike,
+} = threadSlice.actions;

@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
-  createThread,
+  createReply,
   fetchRepliesByThreadId,
   fetchThreads,
 } from "../redux/slices/threadSlice";
@@ -33,13 +33,20 @@ export default function PostReplie() {
     }
   }, [dispatch, threadId]);
 
+  useEffect(() => {
+    console.log(replies);
+  }, [replies]);
+
   const handleCompose = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || !threadId) return;
     const formData = new FormData();
     formData.append("content", content.trim());
+
     if (imageFile) formData.append("image", imageFile);
-    await dispatch(createThread(formData));
-    dispatch(fetchThreads());
+    await dispatch(
+      createReply({ threadId: Number(threadId), payload: formData }),
+    );
+    dispatch(fetchRepliesByThreadId(Number(threadId)));
     setContent("");
     setImageFile(null);
   };
@@ -97,6 +104,7 @@ export default function PostReplie() {
 
       {/* Replies list */}
       {replies.map((reply) => (
+        console.log("reply:", reply),
         <div
           key={reply.id}
           className="flex gap-3 px-4 py-3 border-b border-[#2f3336]"
@@ -104,8 +112,8 @@ export default function PostReplie() {
           <div className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center shrink-0 overflow-hidden">
             {reply.user.photo_profile ? (
               <img
-                src={getImageUrl(reply.user.photo_profile) || ""}
-                alt={reply.user.full_Name}
+                src={getImageUrl(reply.user?.photo_profile) ?? ""}
+                alt={reply.user?.full_Name ?? ""}
                 className="object-cover w-full h-full rounded-full"
               />
             ) : (

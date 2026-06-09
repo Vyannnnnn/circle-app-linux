@@ -70,6 +70,7 @@ export const threadAPI = {
   getThreadById: (id: number) => api.get(`/threads/${id}`),   
   getRepliesByThreadId: (threadId: number) => api.get(`/threads/${threadId}/replies`),
   createThread: (data: FormData) => api.post("/threads/create", data),
+  createReply: (threadId: number, data: FormData) => api.post(`/threads/${threadId}/reply`, data),
   likeThread: (id: number) => api.post(`/threads/${id}/like`),
   unlikeThread: (id: number) => api.post(`/threads/${id}/unlike`),
 };

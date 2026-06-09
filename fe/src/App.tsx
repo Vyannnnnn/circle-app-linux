@@ -12,14 +12,15 @@ function App() {
     <>
       <Toaster position="top-right" richColors />
       <Routes>
-        <Route element={<PrivateRoute />}>
-          <Route path="/" element={<Home />} />
-        </Route>
-        <Route path="/threads/:threadId" element={<DetailThread />} />
-        <Route path="/tes" element={<Tes />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<Login />} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/threads/:threadId" element={<DetailThread />} />
+          <Route path="/tes" element={<Tes />} />
+
+          <Route path="/forgot-password" element={<Login />} />
+        </Route>
       </Routes>
     </>
   );
