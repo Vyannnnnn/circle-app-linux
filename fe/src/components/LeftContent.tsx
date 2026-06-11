@@ -47,7 +47,7 @@ export default function LeftSidebar() {
             onClick={() => {
               setActiveNav(i);
             }}
-            className="flex items-center gap-5 px-3.5 py-5 rounded-full hover:bg-[#1d1f23] transition-colors w-fit max-w-62.5"
+            className="flex items-center bg-[#16181c] gap-5 px-3.5 py-5 rounded-full hover:bg-[#1d1f23] transition-colors w-fit max-w-64"
           >
             <span
               className={i === activeNav ? "text-[#e7e9ea]" : "text-[#e7e9ea]"}

@@ -10,70 +10,70 @@ import { threadAPI, getImageUrl } from "@/services/api";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import type { Thread } from "../types/thread.types";
 import EditProfileModal from "./EditProfileModal";
+import { Link } from "react-router";
 
 export default function MidContentProfile() {
   useWebSocket();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  
+
   const { user } = useAppSelector((state) => state.auth);
-  
-  const [activeTab, setActiveTab] = useState<"posts" | "replies" | "media" | "likes">("posts");
+
+  const [activeTab, setActiveTab] = useState<
+    "posts" | "replies" | "media" | "likes"
+  >("posts");
   const [userThreads, setUserThreads] = useState<Thread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(getProfile());
-    
-    const fetchUserThreads = async () => {
-      try {
-        setIsLoading(true);
-        const response = await threadAPI.getUserThreads();
-        if (response.data?.data?.formattedThreadLists) {
-          setUserThreads(response.data.data.formattedThreadLists);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user threads:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchUserThreads();
-  }, [dispatch]);
+  }, []);
+
+  const fetchUserThreads = async () => {
+    try {
+      setIsLoading(true);
+      const response = await threadAPI.getUserThreads();
+      if (response.data?.data?.formattedThreadLists) {
+        setUserThreads(response.data.data.formattedThreadLists);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user threads:", error);
+    }
+  };
 
   const handleLike = async (id: number) => {
     const threadIndex = userThreads.findIndex((t) => t.id === id);
     if (threadIndex === -1) return;
-    
+
     const thread = userThreads[threadIndex];
 
     try {
       if (thread.isLiked) {
         await threadAPI.unlikeThread(id);
-        setUserThreads(prev => {
+        setUserThreads((prev) => {
           const newThreads = [...prev];
           newThreads[threadIndex] = {
             ...thread,
             isLiked: false,
-            like: thread.like - 1
+            like: thread.like - 1,
           };
           return newThreads;
         });
       } else {
         await threadAPI.likeThread(id);
-        setUserThreads(prev => {
+        setUserThreads((prev) => {
           const newThreads = [...prev];
           newThreads[threadIndex] = {
             ...thread,
             isLiked: true,
-            like: thread.like + 1
+            like: thread.like + 1,
           };
           return newThreads;
         });
       }
-      
+
       // Update global store as well so it's synced if user goes back to home
       dispatch(toggleLike(id));
     } catch (error) {
@@ -85,8 +85,8 @@ export default function MidContentProfile() {
     <main className="flex-1 border-x border-[#2f3336] min-h-screen max-w-150">
       {/* Header */}
       <div className="sticky top-0 bg-black/85 backdrop-blur-md z-10 border-b border-[#2f3336] flex items-center gap-6 px-4 h-13.25">
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-[#181818] transition-colors cursor-pointer -ml-2"
         >
           <ArrowLeft className="w-5 h-5 text-[#eff3f4]" />
@@ -104,7 +104,7 @@ export default function MidContentProfile() {
       {/* Profile Cover & Info */}
       <div className="relative border-b border-[#2f3336]">
         {/* Cover Image Placeholder */}
-        <div className="h-[200px] bg-[#333639] w-full"></div>
+        <div className="h-50 bg-[#333639] w-full"></div>
 
         {/* Profile Details Container */}
         <div className="px-4 pb-0">
@@ -112,7 +112,11 @@ export default function MidContentProfile() {
           <div className="flex justify-between items-start -mt-16 mb-3">
             <div className="w-[133.5px] h-[133.5px] rounded-full border-4 border-black bg-[#16181c] overflow-hidden">
               <img
-                src={user?.photo_profile ? getImageUrl(user.photo_profile) || "" : `https://ui-avatars.com/api/?name=${user?.full_Name || "User"}&background=random`}
+                src={
+                  user?.photo_profile
+                    ? getImageUrl(user.photo_profile) || ""
+                    : `https://ui-avatars.com/api/?name=${user?.full_Name || "User"}&background=random`
+                }
                 alt={user?.full_Name || "User avatar"}
                 className="w-full h-full object-cover"
               />
@@ -121,7 +125,7 @@ export default function MidContentProfile() {
               <Button
                 onClick={() => setIsEditModalOpen(true)}
                 variant="outline"
-                className="rounded-full border-[#536471] bg-black text-white hover:bg-[#eff3f4]/10 font-bold px-4 h-9 cursor-pointer transition-colors"
+                className="rounded-full border-[#536471] bg-white text-black hover:text-white hover:bg-black font-bold px-4 h-9 cursor-pointer transition-colors"
               >
                 Edit profile
               </Button>
@@ -141,14 +145,24 @@ export default function MidContentProfile() {
             </p>
 
             <div className="flex gap-4 text-[15px]">
-              <div className="hover:underline cursor-pointer">
-                <span className="font-bold text-[#e7e9ea]">{user?.followingCount || 0}</span>
+              <Link
+                to={`/follow-list`}
+                className="hover:underline cursor-pointer"
+              >
+                <span className="font-bold text-[#e7e9ea]">
+                  {user?.followingCount || 0}
+                </span>
                 <span className="text-[#71767b] ml-1">Following</span>
-              </div>
-              <div className="hover:underline cursor-pointer">
-                <span className="font-bold text-[#e7e9ea]">{user?.followersCount || 0}</span>
+              </Link>
+              <Link
+                to={`/follow-list`}
+                className="hover:underline cursor-pointer"
+              >
+                <span className="font-bold text-[#e7e9ea]">
+                  {user?.followersCount || 0}
+                </span>
                 <span className="text-[#71767b] ml-1">Followers</span>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -180,8 +194,12 @@ export default function MidContentProfile() {
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-              <h3 className="text-[31px] font-extrabold text-[#e7e9ea] mb-2">No posts yet</h3>
-              <p className="text-[#71767b] text-[15px]">When they post, their threads will show up here.</p>
+              <h3 className="text-[31px] font-extrabold text-[#e7e9ea] mb-2">
+                No posts yet
+              </h3>
+              <p className="text-[#71767b] text-[15px]">
+                When they post, their threads will show up here.
+              </p>
             </div>
           )
         ) : (
@@ -193,10 +211,11 @@ export default function MidContentProfile() {
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <EditProfileModal 
-          isOpen={isEditModalOpen} 
-          onClose={() => setIsEditModalOpen(false)} 
-          user={user} 
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          user={user}
+          onClose={() => setIsEditModalOpen(false)}
+          onProfileUpdated={fetchUserThreads}
         />
       )}
     </main>

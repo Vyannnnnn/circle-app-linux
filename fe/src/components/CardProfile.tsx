@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 import { useAppSelector } from "@/redux/hooks";
 import { useNavigate } from "react-router";
+import { getImageUrl } from "@/services/api";
 
 export const CardProfile = () => {
   const user = useAppSelector((state) => state.auth.user);
@@ -20,11 +21,14 @@ export const CardProfile = () => {
     dispatch(getProfile());
   }, [dispatch]);
   return (
-    <div className="group relative cursor-pointer" onClick={() => navigate("/profile")}>
+    <div
+      className="group relative cursor-pointer"
+      onClick={() => navigate("/profile")}
+    >
       <Card className="relative mx-auto w-full max-w-sm pt-0 bg-[#16181c] border border-[#484e52]">
         {user?.photo_profile && (
           <img
-            src={user.photo_profile || ""}
+            src={getImageUrl(user.photo_profile) || ""}
             alt="Event cover"
             className="aspect-video w-full object-cover brightness-100"
           />

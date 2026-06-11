@@ -1,8 +1,18 @@
 import "../App.css";
 import { Button } from "@/components/ui/button";
 import { CardProfile } from "./CardProfile";
+import { getSuggestions } from "@/redux/slices/authSlice";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 export default function RightContent() {
+  const dispatch = useAppDispatch();
+  const { suggestions } = useAppSelector((state) => state.auth);
+
+  console.log("Suggestions from Redux:", suggestions);
+  useEffect(() => {
+    dispatch(getSuggestions());
+  }, [dispatch]);
   return (
     <aside className="hide-scrollbar w-87.5 hidden lg:flex flex-col sticky top-0 h-screen gap-y-4 overflow-y-auto px-4 shrink-0">
       {/* Search */}
@@ -25,57 +35,32 @@ export default function RightContent() {
           />
         </div>
       </div>
-      {location.pathname !== "/profile" && (
-          <CardProfile />
-      )}
+      {location.pathname !== "/profile" && <CardProfile />}
 
       {/* Who to follow */}
       <div className="bg-[#16181c] rounded-2xl p-4 border border-[#484e52]">
         <h2 className="text-xl font-bold text-[#e7e9ea] mb-4">Who to follow</h2>
-        {[
-          {
-            initials: "FK",
-            bg: "#1a3a5c",
-            color: "#7ec8e3",
-            name: "FilmKillers",
-            handle: "filmkillers",
-          },
-          {
-            initials: "DK",
-            bg: "#3a0a0a",
-            color: "#e07070",
-            name: "DarkKino",
-            handle: "darkkino",
-          },
-          {
-            initials: "SC",
-            bg: "#0a2a0a",
-            color: "#70e070",
-            name: "ScareClips",
-            handle: "scareclips",
-          },
-        ].map((u) => (
-          <div
-            key={u.handle}
-            className="flex items-center gap-3 py-3 hover:bg-[#1d1f23] -mx-4 px-4 cursor-pointer transition-colors"
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
-              style={{ background: u.bg, color: u.color }}
-            >
-              {u.initials}
-            </div>
+
+        {suggestions.map((user) => (
+          <div className="flex items-center gap-3 py-3 hover:bg-[#1d1f23] -mx-4 px-4">
+            <img
+              src={user.photo_profile}
+              alt={user.username}
+              className="w-10 h-10 rounded-full object-cover shrink-0"
+            />
+
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-[15px] text-[#e7e9ea] truncate">
-                {u.name}
-              </p>
-              <p className="text-[#71767b] text-[15px] truncate">@{u.handle}</p>
+              <p className="font-bold text-white truncate">{user.full_Name}</p>
+
+              <p className="text-gray-500 truncate">@{user.username}</p>
             </div>
-            <Button className="border border-[#e7e9ea] text-[#e7e9ea] hover:bg-[#e7e9ea] hover:text-black font-bold text-[14px] rounded-full px-4 h-8 transition-colors shrink-0">
+
+            <Button className="bg-white border-[#536471] hover:text-white cursor-pointer text-black font-bold py-2 px-4 rounded-full shrink-0">
               Follow
             </Button>
           </div>
         ))}
+
         <Button className="text-[#1d9bf0] text-[15px] pt-4 hover:underline block">
           Show more
         </Button>
@@ -91,7 +76,7 @@ export default function RightContent() {
           "Ad info",
           "More ···",
         ].map((l) => (
-          <Button key={l} className="hover:underline">
+          <Button key={l} className="hover:underline bg-[#16181c] cursor-pointer">
             {l}
           </Button>
         ))}

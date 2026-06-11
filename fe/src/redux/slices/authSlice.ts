@@ -12,12 +12,24 @@ interface User {
   followingCount?: number;
 }
 
+// interf {
+//   id: string;
+//   username: string;
+//   full_Name: string;
+//   photo_profile: string;
+//   bio?: string;
+// }
+
 interface AuthState {
   user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+
+  follows: User[];
+  suggestions: User[];
+
   selectedThread?: {
     id: number;
     like: number;
@@ -55,6 +67,8 @@ const initialState: AuthState = {
     const token = localStorage.getItem("token");
     return !!(token && token !== "undefined" && token !== "null");
   })(),
+  follows: [],
+  suggestions: [],
 };
 
 // Async Thunks
@@ -140,6 +154,35 @@ export const getProfile = createAsyncThunk(
   },
 );
 
+export const getFollows = createAsyncThunk(
+  "auth/getFollows",
+  async (type: "followers" | "following", { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getFollows(type);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch follows",
+      );
+    }
+  },
+);
+
+export const getSuggestions = createAsyncThunk(
+  "auth/getSuggestions",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getSuggestions();
+      console.log("Get suggestions response:", response.data.data);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch suggestions",
+      );
+    }
+  },
+);
+
 // Auth Slice
 const authSlice = createSlice({
   name: "auth",
@@ -210,6 +253,35 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(getProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+    // get follow
+    builder
+      .addCase(getFollows.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getFollows.fulfilled, (state, action) => {
+        console.log("PAYLOAD PELER", action.payload);
+        state.loading = false;
+        state.follows = action.payload;
+      })
+      .addCase(getFollows.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+    builder
+      .addCase(getSuggestions.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSuggestions.fulfilled, (state, action) => {
+        state.loading = false;
+
+        console.log("REDUX UPDATE", action.payload);
+
+        state.suggestions = action.payload;
+      })
+      .addCase(getSuggestions.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

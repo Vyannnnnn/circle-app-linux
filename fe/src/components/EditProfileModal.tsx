@@ -9,18 +9,24 @@ interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: any;
+  onProfileUpdated: () => Promise<void>;
 }
 
-export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {
+export default function EditProfileModal({
+  isOpen,
+  onClose,
+  user,
+  onProfileUpdated
+}: EditProfileModalProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [fullName, setFullName] = useState(user?.full_Name || "");
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    user?.photo_profile ? getImageUrl(user.photo_profile) : null
+    user?.photo_profile ? getImageUrl(user.photo_profile) : null,
   );
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,10 +54,10 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
       }
 
       await authAPI.editProfile(formData);
-      
+
       // Fetch the updated profile to update Redux store
       await dispatch(getProfile()).unwrap();
-      
+      await onProfileUpdated();
       onClose();
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -66,7 +72,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#2f3336]">
           <div className="flex items-center gap-6">
-            <button 
+            <button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-[#181818] transition-colors -ml-2"
             >
@@ -74,7 +80,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             </button>
             <h2 className="text-xl font-bold text-[#e7e9ea]">Edit profile</h2>
           </div>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isLoading}
             className="rounded-full bg-[#eff3f4] text-black hover:bg-[#d7dbdc] font-bold px-4 h-8 text-sm disabled:opacity-50"
@@ -99,11 +105,14 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             <div className="relative -mt-16 mb-4 w-[120px] h-[120px]">
               <div className="w-full h-full rounded-full border-4 border-black bg-[#16181c] overflow-hidden relative group">
                 <img
-                  src={imagePreview || `https://ui-avatars.com/api/?name=${user?.full_Name || "User"}&background=random`}
+                  src={
+                    imagePreview ||
+                    `https://ui-avatars.com/api/?name=${user?.full_Name || "User"}&background=random`
+                  }
                   alt="Profile Preview"
                   className="w-full h-full object-cover brightness-75 group-hover:brightness-50 transition-all"
                 />
-                <div 
+                <div
                   className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -112,10 +121,10 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                   </div>
                 </div>
               </div>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
-                className="hidden" 
+                className="hidden"
                 accept="image/*"
                 onChange={handleImageChange}
               />
@@ -124,7 +133,9 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             {/* Inputs */}
             <div className="space-y-6 mt-6">
               <div className="relative border border-[#2f3336] rounded-md px-2 pt-6 pb-2 focus-within:border-[#1d9bf0] focus-within:ring-1 focus-within:ring-[#1d9bf0] transition-colors">
-                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">Name</label>
+                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">
+                  Name
+                </label>
                 <input
                   type="text"
                   value={fullName}
@@ -135,7 +146,9 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
               </div>
 
               <div className="relative border border-[#2f3336] rounded-md px-2 pt-6 pb-2 focus-within:border-[#1d9bf0] focus-within:ring-1 focus-within:ring-[#1d9bf0] transition-colors">
-                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">Username</label>
+                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">
+                  Username
+                </label>
                 <input
                   type="text"
                   value={username}
@@ -146,7 +159,9 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
               </div>
 
               <div className="relative border border-[#2f3336] rounded-md px-2 pt-6 pb-2 focus-within:border-[#1d9bf0] focus-within:ring-1 focus-within:ring-[#1d9bf0] transition-colors">
-                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">Bio</label>
+                <label className="absolute top-2 left-2 text-[13px] text-[#71767b]">
+                  Bio
+                </label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}

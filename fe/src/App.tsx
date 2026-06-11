@@ -7,6 +7,7 @@ import Tes from "./components/tes/Tes";
 import { Toaster } from "sonner";
 import DetailThread from "./page/DetailThread";
 import Profile from "./page/Profile";
+import FollowList from "./page/FollowList";
 
 function App() {
   return (
@@ -20,12 +21,13 @@ function App() {
           <Route path="/threads/:threadId" element={<DetailThread />} />
           <Route path="/tes" element={<Tes />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/follow-list" element={<FollowList />} />
 
-          <Route path="/forgot-password" element={<Login />} />
+          {/* <Route path="/forgot-password" element={<Login />} /> */}
         </Route>
       </Routes>
     </>
   );
-} 
+}
 
 export default App;

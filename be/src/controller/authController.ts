@@ -186,7 +186,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// this code is still in progress, not yet complete
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
+    });
+  }
+};
+
 export const getProfile = async (
   req: Request,
   res: Response,
@@ -284,6 +298,88 @@ export const editProfile = async (
     res.status(500).json({
       success: false,
       message: "Failed to update profile",
+    });
+  }
+};
+
+export const getFollows = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    const type = req.query.type;
+
+    if (type !== "followers" && type !== "following") {
+      res.status(400).json({
+        success: false,
+        message: "Invalid type. Use followers or following",
+      });
+      return;
+    }
+
+    let data;
+
+    if (type === "followers") {
+      const followers = await prisma.following.findMany({
+        where: {
+          followingId: req.user.id,
+        },
+        include: {
+          follower: {
+            select: {
+              id: true,
+              username: true,
+              full_Name: true,
+              photo_profile: true,
+              bio: true,
+            },
+          },
+        },
+      });
+
+      data = followers.map((item) => item.follower);
+    }
+
+    if (type === "following") {
+      const following = await prisma.following.findMany({
+        where: {
+          followerId: req.user.id,
+        },
+        include: {
+          following: {
+            select: {
+              id: true,
+              username: true,
+              full_Name: true,
+              photo_profile: true,
+              bio: true,
+            },
+          },
+        },
+      });
+
+      data = following.map((item) => item.following);
+    }
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+    
+  } catch (error) {
+    console.error("Get follows error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get follows",
     });
   }
 };
