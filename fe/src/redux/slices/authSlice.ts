@@ -7,6 +7,9 @@ interface User {
   email?: string;
   photo_profile?: string;
   full_Name?: string;
+  bio?: string;
+  followersCount?: number;
+  followingCount?: number;
 }
 
 interface AuthState {
@@ -85,6 +88,7 @@ export const loginUser = createAsyncThunk(
       const response = await authAPI.login(data);
       console.log("LOGIN RESPONSE", response);
       console.log("Login response:", response.data);
+      console.log("Login response data:", response.data.data);
       const token = response.data.token;
       const userData = response.data.data;
 
@@ -102,8 +106,11 @@ export const loginUser = createAsyncThunk(
         email: userData.email,
         photo_profile: userData.photo_profile,
         full_Name: userData.full_Name,
+        bio: userData.bio,
+        followersCount: userData.followersCount,
+        followingCount: userData.followingCount,
       };
-
+      console.log("Parsed user data:", user);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
@@ -118,19 +125,20 @@ export const logoutUser = createAsyncThunk("auth/logout", async () => {
   authAPI.logout();
 });
 
-// export const getProfile = createAsyncThunk(
-//   "auth/getProfile",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await authAPI.getProfile();
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(
-//         error.response?.data?.message || "Failed to fetch profile"
-//       );
-//     }
-//   }
-// );
+export const getProfile = createAsyncThunk(
+  "auth/getProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getProfileById();
+      console.log("Get profile response:", response.data.data);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch profile",
+      );
+    }
+  },
+);
 
 // Auth Slice
 const authSlice = createSlice({
@@ -153,8 +161,8 @@ const authSlice = createSlice({
     updateThreadLikes: (state, action) => {
       if (state.selectedThread) {
         state.selectedThread.like = action.payload;
-      } 
-    }
+      }
+    },
   },
   extraReducers: (builder) => {
     // Register
@@ -193,18 +201,18 @@ const authSlice = createSlice({
       });
 
     // Get Profile
-    // builder
-    //   .addCase(getProfile.pending, (state) => {
-    //     state.loading = true;
-    //   })
-    //   .addCase(getProfile.fulfilled, (state, action) => {
-    //     state.loading = false;
-    //     state.user = action.payload;
-    //   })
-    //   .addCase(getProfile.rejected, (state, action) => {
-    //     state.loading = false;
-    //     state.error = action.payload as string;
-    //   });
+    builder
+      .addCase(getProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(getProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

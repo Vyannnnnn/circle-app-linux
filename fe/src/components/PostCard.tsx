@@ -2,7 +2,6 @@ import type { Thread } from "../types/thread.types";
 import { ReplyIcon, DotsHIcon, HeartIcon, VerifyBadge } from "./icons/svgIcons";
 import { Button } from "@/components/ui/button";
 import { getImageUrl } from "../services/api";
-import { Link } from "react-router";
 import { useNavigate } from "react-router";
 
 export default function PostCard({
@@ -14,7 +13,6 @@ export default function PostCard({
 }) {
   const navigate = useNavigate();
   return (
-    // <Link to={`/threads/${thread.id}`} className="no-underline cursor-pointer">
     <article
       onClick={() => navigate(`/threads/${thread.id}`)}
       className="flex gap-3 px-4 py-3 border-b border-[#2f3336] hover:bg-[#080808] transition-colors"
@@ -86,6 +84,5 @@ export default function PostCard({
         </div>
       </div>
     </article>
-    // </Link>
   );
 }

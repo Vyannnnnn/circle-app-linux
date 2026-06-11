@@ -56,7 +56,9 @@ export const authAPI = {
   login: (data: { email: string; password: string }) =>
     api.post("/auth/login", data),
 
-  //   getProfile: () => api.get("/auth/profile"),
+  getProfileById: () => api.get("/auth/profile"),
+  
+  editProfile: (data: FormData) => api.put("/auth/profile", data),
 
   logout: () => {
     localStorage.removeItem("token");
@@ -67,6 +69,7 @@ export const authAPI = {
 
 export const threadAPI = {
   getThreads: () => api.get("/threads/lists"),
+  getUserThreads: () => api.get("/threads/user"),
   getThreadById: (id: number) => api.get(`/threads/${id}`),   
   getRepliesByThreadId: (threadId: number) => api.get(`/threads/${threadId}/replies`),
   createThread: (data: FormData) => api.post("/threads/create", data),

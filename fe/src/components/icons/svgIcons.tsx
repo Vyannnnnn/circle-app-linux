@@ -1,10 +1,10 @@
 export const HomeIcon = ({ filled }: { filled?: boolean }) => (
   <svg
-    viewBox="0 0 24 24"
+    viewBox="0 0 25 25"
     fill={filled ? "currentColor" : "none"}
     stroke="currentColor"
     strokeWidth={filled ? 0 : 2}
-    className="w-7 h-7"
+    className=""
   >
     <path d="M22.58 7.35L12.475 1.897a1 1 0 00-.95 0L1.425 7.35A2 2 0 00.5 9.057V21a1 1 0 001 1h8a1 1 0 001-1v-4h3v4a1 1 0 001 1h8a1 1 0 001-1V9.057a2 2 0 00-.92-1.707z" />
   </svg>

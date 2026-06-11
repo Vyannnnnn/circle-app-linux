@@ -169,6 +169,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         full_Name: user.full_Name,
         photo_profile: user.photo_profile,
+        bio: user.bio,
       },
       token,
     });
@@ -201,14 +202,9 @@ export const getProfile = async (
 
     const user = await prisma.users.findUnique({
       where: { id: req.user.id },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        full_Name: true,
-        photo_profile: true,
-        bio: true,
-        createdAt: true,
+      include: {
+        followers: true,
+        following: true,
       },
     });
 
@@ -222,13 +218,72 @@ export const getProfile = async (
 
     res.status(200).json({
       success: true,
-      data: user,
+      data: {
+        id: user.id,
+        username: user.username,
+        full_Name: user.full_Name,
+        photo_profile: user.photo_profile,
+        bio: user.bio,
+        followersCount: user.followers.length,
+        followingCount: user.following.length,
+      },
     });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to get profile",
+    });
+  }
+};
+
+export const editProfile = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    const { full_Name, username, bio } = req.body;
+    let photo_profile = undefined;
+
+    if (req.file) {
+      photo_profile = `/uploads/${req.file.filename}`;
+    }
+
+    const dataToUpdate: any = {};
+    if (full_Name) dataToUpdate.full_Name = sanitizeInput(full_Name);
+    if (username) dataToUpdate.username = sanitizeInput(username);
+    if (bio !== undefined) dataToUpdate.bio = sanitizeInput(bio);
+    if (photo_profile) dataToUpdate.photo_profile = photo_profile;
+
+    const updatedUser = await prisma.users.update({
+      where: { id: req.user.id },
+      data: dataToUpdate,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        full_Name: updatedUser.full_Name,
+        photo_profile: updatedUser.photo_profile,
+        bio: updatedUser.bio,
+      },
+    });
+  } catch (error) {
+    console.error("Edit profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
     });
   }
 };
