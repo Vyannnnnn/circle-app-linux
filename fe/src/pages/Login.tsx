@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { loginUser, clearError } from "../redux/slices/authSlice";
+import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
+import type { LoginFormData } from "@/types/auth.types";
+import type { ValidationErrors } from "@/types/ValidationError.types";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,29 +14,15 @@ export default function Login() {
     (state) => state.auth,
   );
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
-    console.log("error", error);
-  }, [error]);
-
-  useEffect(() => {
-    return () => {
-      console.log("unmounting");
-      dispatch(clearError());
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    // Clear Redux error when component mounts
-    return () => {
-      dispatch(clearError());
-    };
+    dispatch(clearError());
   }, [dispatch]);
 
   // Redirect to home if already authenticated
@@ -44,22 +34,21 @@ export default function Login() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
-    // Clear validation error for this field when user starts typing
+    }));
     if (validationErrors[name]) {
-      setValidationErrors({
-        ...validationErrors,
+      setValidationErrors((prev) => ({
+        ...prev,
         [name]: "",
-      });
+      }));
     }
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    const newErrors: ValidationErrors = {};
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -78,34 +67,30 @@ export default function Login() {
       return;
     }
     // Dispatch login action
-    const result = await dispatch(
+    await dispatch(
       loginUser({
         email: formData.email,
         password: formData.password,
       }),
     );
-
-    if (result.type === loginUser.fulfilled.type) {
-      navigate("/");
-    }
   };
   return (
-    <section className="bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <a
-          href="#"
-          className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
+    <section className="bg-black">
+      <div className="flex flex-col  items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <Link
+          to="/"
+          className="flex items-center mb-6 text-2xl font-semibold text-white"
         >
           <img
-            className="w-8 h-8 mr-2"
-            src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
+            className="w-10 h-10 mr-2 rounded-full object-cover"
+            src={logo}
             alt="logo"
           />
-          Circle App
-        </a>
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+          Triple
+        </Link>
+        <div className="w-full bg-[#202327] rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+            <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl text-white">
               Sign in to your account
             </h1>
 
@@ -120,7 +105,7 @@ export default function Login() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  className="block mb-2 text-sm font-medium text-white"
                 >
                   Your email
                 </label>
@@ -147,7 +132,7 @@ export default function Login() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  className="block mb-2 text-sm font-medium text-white"
                 >
                   Password
                 </label>
@@ -172,25 +157,25 @@ export default function Login() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
                 className={`w-full cursor-pointer text-white ${
                   loading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
+                    : "bg-[#1d9bf0] hover:bg-[#1a8cd8]"
                 } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800`}
               >
                 {loading ? "Signing in..." : "Sign in"}
-              </button>
+              </Button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don’t have an account yet?{" "}
-                <a
-                  href="/register"
-                  className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+                <Link
+                  to="/register"
+                  className="font-medium text-[#1d9bf0] hover:underline "
                 >
                   Sign up
-                </a>
+                </Link>
               </p>
             </form>
           </div>

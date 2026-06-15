@@ -1,6 +1,28 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
+/**
+ * @swagger
+ * /threads/{threadId}/replies:
+ *   get:
+ *     summary: Get all replies for a specific thread
+ *     tags: [Replies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *       400:
+ *         description: Invalid thread ID
+ *       401:
+ *         description: Unauthorized
+ */
 export const getRepliesByThreadId = async (
   req: Request,
   res: Response,

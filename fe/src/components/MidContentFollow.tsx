@@ -1,24 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { getFollows } from "@/redux/slices/authSlice";
+import { getImageUrl } from "@/services/api";
+import { Loader2 } from "lucide-react";
 
 export default function MidContentFollow() {
-  useWebSocket();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"followers" | "following">(
     "followers",
   );
-  const { follows } = useAppSelector((state) => state.auth);
-  console.log("REDUX FOLLOWS:", follows);
-  const users = follows;
+  const { follows, loading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(getFollows(activeTab));
   }, [activeTab, dispatch]);
-  console.log(activeTab);
-  console.log(follows);
+
   return (
     <main className="flex-1 border-x border-[#2f3336] min-h-screen max-w-150">
       {/* Sticky header */}
@@ -44,21 +41,37 @@ export default function MidContentFollow() {
       </div>
 
       <>
-        {users.length === 0 && (
+        {loading && (
+          <Loader2 className="animate-spin h-6 w-6 text-gray-500 mx-auto mt-10">
+            Loading...
+          </Loader2>
+        )}
+        {follows.length === 0 && (
           <div className="flex flex-col items-center justify-center mt-10 gap-4">
             <p className="text-gray-500 text-lg">No {activeTab} yet</p>
           </div>
         )}
-        {users.map((user) => (
+        {follows.map((user) => (
           <div
             key={user.id}
             className="flex items-center gap-3 p-4 border-b border-[#2f3336]"
           >
-            <img
-              src={user.photo_profile}
-              alt={user.username}
-              className="w-10 h-10 rounded-full"
-            />
+            {user.photo_profile ? (
+              <img
+                src={
+                  getImageUrl(user.photo_profile) ||
+                  "https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png"
+                }
+                alt={user.username}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <img
+                src="https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png"
+                alt={user.username}
+                className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white font-bold"
+              />
+            )}
 
             <div>
               <p className="font-bold text-white">{user.full_Name}</p>

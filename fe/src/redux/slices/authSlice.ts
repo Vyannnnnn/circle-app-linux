@@ -1,40 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authAPI } from "../../services/api";
-
-interface User {
-  id?: string;
-  username?: string;
-  email?: string;
-  photo_profile?: string;
-  full_Name?: string;
-  bio?: string;
-  followersCount?: number;
-  followingCount?: number;
-}
-
-// interf {
-//   id: string;
-//   username: string;
-//   full_Name: string;
-//   photo_profile: string;
-//   bio?: string;
-// }
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-
-  follows: User[];
-  suggestions: User[];
-
-  selectedThread?: {
-    id: number;
-    like: number;
-  } | null;
-}
+import type { AuthState } from "../../types/auth.types";
 
 const initialState: AuthState = {
   user: (() => {
@@ -69,6 +35,8 @@ const initialState: AuthState = {
   })(),
   follows: [],
   suggestions: [],
+  searchResults: [],
+  viewedProfile: null,
 };
 
 // Async Thunks
@@ -77,8 +45,8 @@ export const registerUser = createAsyncThunk(
   async (
     data: {
       username: string;
-      full_Name?: string;
-      email?: string;
+      full_Name: string;
+      email: string;
       password: string;
     },
     { rejectWithValue },
@@ -98,11 +66,7 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (data: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      console.log("LOGIN THUNK START");
       const response = await authAPI.login(data);
-      console.log("LOGIN RESPONSE", response);
-      console.log("Login response:", response.data);
-      console.log("Login response data:", response.data.data);
       const token = response.data.token;
       const userData = response.data.data;
 
@@ -124,7 +88,6 @@ export const loginUser = createAsyncThunk(
         followersCount: userData.followersCount,
         followingCount: userData.followingCount,
       };
-      console.log("Parsed user data:", user);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
@@ -136,19 +99,64 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk("auth/logout", async () => {
-  authAPI.logout();
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("threads");
 });
 
 export const getProfile = createAsyncThunk(
   "auth/getProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authAPI.getProfileById();
-      console.log("Get profile response:", response.data.data);
+      const response = await authAPI.getProfile();
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch profile",
+      );
+    }
+  },
+);
+
+export const getProfileById = createAsyncThunk(
+  "auth/getProfileById",
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getProfileById(userId);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch profile",
+      );
+    }
+  },
+);
+
+
+
+
+
+export const followUser = createAsyncThunk(
+  "auth/follow",
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      await authAPI.follow(userId);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to follow user",
+      );
+    }
+  },
+);
+
+export const unfollowUser = createAsyncThunk(
+  "auth/unfollow",
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      await authAPI.unfollow(userId);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to unfollow user",
       );
     }
   },
@@ -173,11 +181,24 @@ export const getSuggestions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await authAPI.getSuggestions();
-      console.log("Get suggestions response:", response.data.data);
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch suggestions",
+      );
+    }
+  },
+);
+
+export const searchUsers = createAsyncThunk(
+  "auth/searchUsers",
+  async (query: string, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.searchUsers(query);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to search users",
       );
     }
   },
@@ -188,23 +209,21 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
     logout: (state) => {
-      authAPI.logout();
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.searchResults = [];
+      state.follows = [];
+      state.suggestions = [];
 
-      // localStorage.removeItem("token");
-      // localStorage.removeItem("user");
-    },
-    clearError: (state) => {
-      state.error = null;
-    },
-    updateThreadLikes: (state, action) => {
-      if (state.selectedThread) {
-        state.selectedThread.like = action.payload;
-      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("threads");
     },
   },
   extraReducers: (builder) => {
@@ -217,7 +236,6 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
-        // User will be redirected to login after successful registration
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -243,6 +261,22 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       });
 
+    // Logout
+    builder.addCase(logoutUser.fulfilled, (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      state.error = null;
+      state.searchResults = [];
+      state.follows = [];
+      state.suggestions = [];
+    });
+
+    // Get Profile By Id
+    builder.addCase(getProfileById.fulfilled, (state, action) => {
+      state.viewedProfile = action.payload;
+    });
+    
     // Get Profile
     builder
       .addCase(getProfile.pending, (state) => {
@@ -256,13 +290,27 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       });
+
+    // search users
+    builder
+      .addCase(searchUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(searchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
     // get follow
     builder
       .addCase(getFollows.pending, (state) => {
         state.loading = true;
       })
       .addCase(getFollows.fulfilled, (state, action) => {
-        console.log("PAYLOAD PELER", action.payload);
         state.loading = false;
         state.follows = action.payload;
       })
@@ -270,14 +318,22 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       });
+    // follow/unfollow user
+    builder
+      .addCase(followUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+      .addCase(unfollowUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      });
+    // get suggestions
     builder
       .addCase(getSuggestions.pending, (state) => {
         state.loading = true;
       })
       .addCase(getSuggestions.fulfilled, (state, action) => {
         state.loading = false;
-
-        console.log("REDUX UPDATE", action.payload);
 
         state.suggestions = action.payload;
       })
@@ -288,5 +344,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { clearError, logout } = authSlice.actions;
 export default authSlice.reducer;

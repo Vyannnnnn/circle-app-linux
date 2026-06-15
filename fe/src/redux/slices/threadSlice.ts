@@ -7,6 +7,8 @@ import type { Replie } from "@/types/replie.types";
 interface ThreadState {
   threads: Thread[];
   selectedThread: Thread | null;
+  profileThreads: Thread[];
+  viewedProfileThreads: Thread[];
   replies: Replie[];
   loading: boolean;
   error: string | null;
@@ -15,6 +17,8 @@ interface ThreadState {
 const initialState: ThreadState = {
   threads: [],
   selectedThread: null,
+  profileThreads: [],
+  viewedProfileThreads: [],
   replies: [],
   loading: false,
   error: null,
@@ -35,11 +39,12 @@ export const fetchThreads = createAsyncThunk(
   },
 );
 
+// test
 export const fetchThreadById = createAsyncThunk(
-  "threads/:threadId",
-  async (id: number, { rejectWithValue }) => {
+  "threads/fetchThreadById",
+  async (threadId: number, { rejectWithValue }) => {
     try {
-      const res = await threadAPI.getThreadById(id);
+      const res = await threadAPI.getThreadById(threadId);
       return res.data.data.formattedThread;
     } catch (err: any) {
       return rejectWithValue(
@@ -48,9 +53,36 @@ export const fetchThreadById = createAsyncThunk(
     }
   },
 );
+export const fetchUserThreads = createAsyncThunk(
+  "threads/fetchUserThreads",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await threadAPI.getUserThreads();
+      return response.data.data.formattedThreadLists;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user threads",
+      );
+    }
+  },
+);
+
+export const fetchThreadsByUserId = createAsyncThunk(
+  "thread/fetchThreadsByUserId",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const res = await threadAPI.getThreadsByUserId(id);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch threads by user",
+      );
+    }
+  },
+);
 
 export const fetchRepliesByThreadId = createAsyncThunk(
-  "threads/:threadId/replies",
+  "threads/fetchRepliesByThreadId",
   async (id: number, { rejectWithValue }) => {
     try {
       const res = await threadAPI.getRepliesByThreadId(id);
@@ -111,7 +143,6 @@ export const createReply = createAsyncThunk(
   ) => {
     try {
       const res = await threadAPI.createReply(threadId, payload);
-      console.log("createReply response:", res.data);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(
@@ -126,16 +157,6 @@ const threadSlice = createSlice({
   initialState,
 
   reducers: {
-    toggleLike: (state, action: PayloadAction<number>) => {
-      const thread = state.threads.find((t) => t.id === action.payload);
-
-      if (!thread) return;
-
-      const wasLiked = thread.isLiked;
-
-      thread.like = wasLiked ? thread.like - 1 : thread.like + 1;
-      thread.isLiked = !wasLiked;
-    },
     toggleLikeSelected: (state) => {
       if (!state.selectedThread) return;
 
@@ -146,19 +167,46 @@ const threadSlice = createSlice({
         : state.selectedThread.like + 1;
       state.selectedThread.isLiked = !wasLiked;
     },
-    hydrateThreads: (state, action: PayloadAction<Thread[]>) => {
-      state.threads = action.payload;
-    },
     addThread: (state, action: PayloadAction<Thread>) => {
       state.threads.unshift(action.payload);
     },
     clearSelectedThread: (state) => {
       state.selectedThread = null;
     },
-    updateThreadLike: (state, action: PayloadAction<number>) => {
-      if (state.selectedThread) {
-        state.selectedThread.like = action.payload;
+    updateThreadLike: (
+      state,
+      action: PayloadAction<{ threadId: number; likeCount: number }>,
+    ) => {
+      const { threadId, likeCount } = action.payload;
+      if (state.selectedThread && state.selectedThread.id === threadId) {
+        state.selectedThread.like = likeCount;
       }
+      const homeThread = state.threads.find((t) => t.id === threadId);
+      if (homeThread) {
+        homeThread.like = likeCount;
+      }
+      const profileThread = state.profileThreads.find((t) => t.id === threadId);
+      if (profileThread) {
+        profileThread.like = likeCount;
+      }
+    },
+    toggleLike: (state, action) => {
+      const id = action.payload;
+
+      const homeThread = state.threads.find((t) => t.id === id);
+
+      const profileThread = state.profileThreads.find((t) => t.id === id);
+
+      const update = (thread: Thread) => {
+        const wasLiked = thread.isLiked;
+
+        thread.like += wasLiked ? -1 : 1;
+        thread.isLiked = !wasLiked;
+      };
+
+      if (homeThread) update(homeThread);
+
+      if (profileThread) update(profileThread);
     },
   },
   extraReducers: (builder) => {
@@ -174,9 +222,10 @@ const threadSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(createThread.fulfilled, (state, action) => {
-        // state.threads.unshift(action.payload);
+      .addCase(fetchUserThreads.fulfilled, (state, action) => {
+        state.profileThreads = action.payload;
       })
+      // fetchThreadById
       .addCase(fetchThreadById.pending, (state) => {
         state.loading = true;
       })
@@ -184,34 +233,36 @@ const threadSlice = createSlice({
         state.loading = false;
         state.selectedThread = action.payload;
       })
-      .addCase(fetchThreadById.rejected, (state) => {
+      .addCase(fetchThreadById.rejected, (state, action) => {
         state.loading = false;
-        // state.error = action.payload as string;
+        state.error = action.payload as string;
       })
+
+      // fetchThreadsByUserId
+      .addCase(fetchThreadsByUserId.fulfilled, (state, action) => {
+        console.log("PAYLOAD:", action.payload);
+        console.log("REDUCER HIT");
+        state.viewedProfileThreads = action.payload;
+      })
+
       .addCase(fetchRepliesByThreadId.fulfilled, (state, action) => {
-        // state.loading = false;
+        state.loading = false;
         state.replies = action.payload;
       })
       .addCase(createReply.fulfilled, (state, action) => {
-        state.replies.unshift(action.payload.reply);
-        if (state.selectedThread) {
-          state.selectedThread.replies += 1;
+        if (action.payload?.reply) {
+          state.replies.unshift(action.payload.reply);
+          if (state.selectedThread) {
+            state.selectedThread.replies += 1;
+          }
         }
       });
-    // .addCase(createThread.rejected, (state, action) => {
-    //   state.error = action.payload as string;
-    // })
-
-    //  .addCase(likeThread.rejected, (state, action) => {
-    //   state.error = action.payload as string;
-    // });
   },
 });
 
 export default threadSlice.reducer;
 export const {
   toggleLike,
-  hydrateThreads,
   addThread,
   toggleLikeSelected,
   clearSelectedThread,

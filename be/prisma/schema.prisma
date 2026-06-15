@@ -28,6 +28,9 @@ model users {
   replies       replies[]
   following     following[] @relation("FollowingRelation")
   followers     following[] @relation("FollowerRelation")
+
+  notificationsReceived notifications[] @relation("ReceivedNotifications")
+  notificationsSent     notifications[] @relation("SentNotifications")
 }
 
 model following {
@@ -69,6 +72,7 @@ model threads {
 
   likes     likes[]
   replies   replies[]
+  notifications notifications[]
 
   @@index([userId])
 }
@@ -89,4 +93,24 @@ model replies {
 
   @@index([userId])
   @@index([threadId])
+}
+
+model notifications {
+  id        Int      @id @default(autoincrement())
+
+  receiverId Int
+  receiver   users    @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+
+  senderId   Int
+  sender     users    @relation("SentNotifications", fields: [senderId], references: [id])
+
+  type       String   // "LIKE", "REPLY", "FOLLOW"
+
+  threadId   Int?
+  thread     threads? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([receiverId])
 }

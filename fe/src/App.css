@@ -1,3 +1,7 @@
+:root {
+  background-color: black;
+  min-height: 100%;
+}
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -1,22 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authAPI, getImageUrl } from "@/services/api";
 import { useAppDispatch } from "../redux/hooks";
 import { getProfile } from "../redux/slices/authSlice";
-
-interface EditProfileModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  user: any;
-  onProfileUpdated: () => Promise<void>;
-}
+import type { EditProfileModalProps } from "../types/auth.types";
+import { toast } from "sonner";
+import { fetchUserThreads } from "@/redux/slices/threadSlice";
 
 export default function EditProfileModal({
   isOpen,
   onClose,
   user,
-  onProfileUpdated
 }: EditProfileModalProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +24,23 @@ export default function EditProfileModal({
     user?.photo_profile ? getImageUrl(user.photo_profile) : null,
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setFullName(user?.full_Name || "");
+    setUsername(user?.username || "");
+    setBio(user?.bio || "");
+    setImagePreview(
+      user?.photo_profile ? getImageUrl(user.photo_profile) : null,
+    );
+  }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   if (!isOpen) return null;
 
@@ -55,12 +67,13 @@ export default function EditProfileModal({
 
       await authAPI.editProfile(formData);
 
-      // Fetch the updated profile to update Redux store
       await dispatch(getProfile()).unwrap();
-      await onProfileUpdated();
+      dispatch(fetchUserThreads());
+      // await onProfileUpdated();
       onClose();
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -68,20 +81,21 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm p-4">
-      <div className="bg-black border border-[#2f3336] rounded-2xl w-full max-w-[600px] overflow-hidden flex flex-col shadow-2xl">
+      <div className="bg-black border border-[#2f3336] rounded-2xl w-full max-w-150 overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#2f3336]">
           <div className="flex items-center gap-6">
-            <button
+            <Button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-[#181818] transition-colors -ml-2"
             >
               <X className="w-5 h-5 text-[#eff3f4]" />
-            </button>
+            </Button>
             <h2 className="text-xl font-bold text-[#e7e9ea]">Edit profile</h2>
           </div>
           <Button
-            onClick={handleSubmit}
+            type="submit"
+            form="edit-profile-form"
             disabled={isLoading}
             className="rounded-full bg-[#eff3f4] text-black hover:bg-[#d7dbdc] font-bold px-4 h-8 text-sm disabled:opacity-50"
           >
@@ -92,7 +106,7 @@ export default function EditProfileModal({
         {/* Form Content */}
         <div className="overflow-y-auto max-h-[80vh] pb-8">
           {/* Cover Placeholder */}
-          <div className="h-[200px] bg-[#333639] w-full relative">
+          <div className="h-50 bg-[#333639] w-full relative">
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
               <div className="p-3 bg-black/50 rounded-full cursor-not-allowed hover:bg-black/60 transition-colors">
                 <Camera className="w-6 h-6 text-white" />
@@ -100,14 +114,14 @@ export default function EditProfileModal({
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="px-4">
+          <form id="edit-profile-form" onSubmit={handleSubmit} className="px-4">
             {/* Avatar Edit */}
-            <div className="relative -mt-16 mb-4 w-[120px] h-[120px]">
+            <div className="relative -mt-16 mb-4 w-30 h-30">
               <div className="w-full h-full rounded-full border-4 border-black bg-[#16181c] overflow-hidden relative group">
                 <img
                   src={
                     imagePreview ||
-                    `https://ui-avatars.com/api/?name=${user?.full_Name || "User"}&background=random`
+                    `${user?.full_Name}`
                   }
                   alt="Profile Preview"
                   className="w-full h-full object-cover brightness-75 group-hover:brightness-50 transition-all"
@@ -165,7 +179,7 @@ export default function EditProfileModal({
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full bg-transparent text-[#e7e9ea] text-[17px] focus:outline-none resize-none min-h-[80px]"
+                  className="w-full bg-transparent text-[#e7e9ea] text-[17px] focus:outline-none resize-none min-h-20"
                 />
               </div>
             </div>

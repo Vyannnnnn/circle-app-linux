@@ -1,6 +1,20 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
+/**
+ * @swagger
+ * /auth/suggested-users:
+ *   get:
+ *     summary: Get suggested users to follow
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ */
 export const getSuggestions = async (
   req: Request,
   res: Response

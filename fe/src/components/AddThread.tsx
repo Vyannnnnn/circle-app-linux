@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { createThread, fetchThreads } from "../redux/slices/threadSlice";
+import { createThread } from "../redux/slices/threadSlice";
 import { Input } from "@/components/ui/input";
 import { getImageUrl } from "../services/api";
+import { toast } from "sonner";
 
 export default function AddThread() {
   const dispatch = useAppDispatch();
@@ -12,6 +13,23 @@ export default function AddThread() {
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const user = useAppSelector((state) => state.auth.user);
+  const {loading} = useAppSelector((state) => state.thread);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  useEffect(() => {
+  if (!imageFile) {
+    setPreviewUrl("");
+    return;
+  }
+
+  const url = URL.createObjectURL(imageFile);
+
+  setPreviewUrl(url);
+
+  return () => {
+    URL.revokeObjectURL(url);
+  };
+}, [imageFile]);
 
   useEffect(() => {
     const ta = textareaRef.current;
@@ -28,18 +46,23 @@ export default function AddThread() {
     formData.append("content", content.trim());
     if (imageFile) formData.append("image", imageFile);
 
-    await dispatch(createThread(formData));
-    dispatch(fetchThreads());
-    setContent("");
-    setImageFile(null);
+    try {
+      await dispatch(createThread(formData)).unwrap();
+
+      setContent("");
+      setImageFile(null);
+    } catch (err) {
+      toast.error("Failed to post thread. Please try again.");
+      console.error("Error posting thread:", err);
+    }
   };
   return (
     <div className="flex gap-3 px-4 py-3 border-b border-[#2f3336]">
       <div className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center font-bold text-white text-sm shrink-0">
         {user?.photo_profile ? (
           <img
-            src={getImageUrl(user?.photo_profile) || ""}
-            alt={user?.full_Name}
+            src={getImageUrl(user.photo_profile) ?? ""}
+            alt={user.full_Name}
             className="object-cover w-full h-full rounded-full"
           />
         ) : (
@@ -59,14 +82,7 @@ export default function AddThread() {
           rows={2}
           className="w-full bg-transparent focus:outline-none focus:border-none border-none outline-none text-xl text-[#e7e9ea] placeholder-[#71767b] resize-none font-sans mb-2"
         />
-        {content.trim().length > 0 && (
-          <div className="flex items-center gap-2 mb-3 text-[#1d9bf0] text-[14px] cursor-pointer">
-            <svg className="w-4 h-4" fill="#1d9bf0" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
-            </svg>
-            <span>Everyone can reply</span>
-          </div>
-        )}
+        
         <div className="flex items-center justify-between pt-3 border-t border-[#2f3336]">
           <div className="flex gap-1 text-[#1d9bf0]">
             <Input
@@ -78,20 +94,20 @@ export default function AddThread() {
             />
           </div>
           {imageFile && (
-            <div className="w-full h-full flex items-center justify-center p-2">
+            <div className="mt-1">
               <img
-                src={URL.createObjectURL(imageFile)}
+                src={previewUrl}
                 alt="Preview"
-                className="max-w-full max-h-full object-contain"
+                className="max-w-80 rounded-xl object-contain"
               />
             </div>
           )}
           <Button
             onClick={handleCompose}
-            disabled={!content.trim()}
+            disabled={!content.trim() || loading}
             className="bg-[#1d9bf0] hover:bg-[#1a8cd8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[15px] rounded-full px-4.5 h-9 transition-colors"
           >
-            Post
+            {loading ? "Posting..." : "Post"}
           </Button>
         </div>
       </div>

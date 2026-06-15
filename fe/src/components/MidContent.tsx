@@ -4,46 +4,33 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   fetchThreads,
   toggleLike,
-  hydrateThreads,
+  likeThread,
+  unlikeThread,
 } from "../redux/slices/threadSlice";
 import PostCard from "./PostCard";
-import { threadAPI } from "@/services/api";
 import AddThread from "./AddThread";
-import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function MidContent() {
-  useWebSocket();
   const dispatch = useAppDispatch();
   const { threads } = useAppSelector((state) => state.thread);
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
 
   useEffect(() => {
-    const saved = localStorage.getItem("threads");
-    if (saved) {
-      dispatch(hydrateThreads(JSON.parse(saved)));
-    } else {
-      dispatch(fetchThreads());
-    }
     dispatch(fetchThreads());
   }, [dispatch]);
-
-  useEffect(() => {
-    localStorage.setItem("threads", JSON.stringify(threads));
-  }, [threads]);
 
   const handleLike = async (id: number) => {
     const thread = threads.find((t) => t.id === id);
     if (!thread) return;
-
+    dispatch(toggleLike(id));
     try {
       if (thread.isLiked) {
-        await threadAPI.unlikeThread(id);
+        await dispatch(unlikeThread(id)).unwrap();
       } else {
-        await threadAPI.likeThread(id);
+        await dispatch(likeThread(id)).unwrap();
       }
-      dispatch(toggleLike(id));
     } catch (error) {
-      console.error("Error occurred while toggling like:", error);
+      dispatch(toggleLike(id));
     }
   };
 

@@ -1,6 +1,61 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Thread:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         content:
+ *           type: string
+ *         image:
+ *           type: string
+ *           nullable: true
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         user:
+ *           $ref: '#/components/schemas/User'
+ *         like:
+ *           type: integer
+ *         replies:
+ *           type: integer
+ *         isLiked:
+ *           type: boolean
+ *
+ *     Reply:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         content:
+ *           type: string
+ *         image:
+ *           type: string
+ *           nullable: true
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         user:
+ *           $ref: '#/components/schemas/User'
+ *
+ * @swagger
+ * /threads:
+ *   get:
+ *     summary: Get all threads
+ *     tags: [Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ */
 export const getThreadLists = async (
   req: Request,
   res: Response,
@@ -62,6 +117,20 @@ export const getThreadLists = async (
   }
 };
 
+/**
+ * @swagger
+ * /threads/user:
+ *   get:
+ *     summary: Get threads created by the current user
+ *     tags: [Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ */
 export const getUserThreads = async (
   req: Request,
   res: Response,

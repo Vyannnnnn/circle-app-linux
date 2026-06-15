@@ -10,6 +10,61 @@ import {
   sanitizeInput,
 } from "../utils/validation";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         username:
+ *           type: string
+ *         email:
+ *           type: string
+ *         full_Name:
+ *           type: string
+ *         photo_profile:
+ *           type: string
+ *           nullable: true
+ *         bio:
+ *           type: string
+ *           nullable: true
+ *
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - full_Name
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               full_Name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Registration successful
+ *       400:
+ *         description: Bad request (validation errors)
+ *       409:
+ *         description: Conflict (email or username already exists)
+ */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password, full_Name } = req.body;
@@ -116,6 +171,47 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -186,21 +282,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const logout = async (req: Request, res: Response): Promise<void> => {
-  try {
-    res.status(200).json({
-      success: true,
-      message: "Logout successful",
-    });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Logout failed",
-    });
-  }
-};
 
+/**
+ * @swagger
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     se
+ * /auth/profile:curity:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
 export const getProfile = async (
   req: Request,
   res: Response,
@@ -238,8 +336,8 @@ export const getProfile = async (
         full_Name: user.full_Name,
         photo_profile: user.photo_profile,
         bio: user.bio,
-        followersCount: user.followers.length,
-        followingCount: user.following.length,
+        followersCount: user.following.length,
+        followingCount: user.followers.length,
       },
     });
   } catch (error) {
@@ -251,6 +349,162 @@ export const getProfile = async (
   }
 };
 
+
+export const getProfileById = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const user = await prisma.users.findUnique({
+      where: { id: userId },
+      include: {
+        followers: true,
+        following: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: user.id,
+        username: user.username,
+        full_Name: user.full_Name,
+        photo_profile: user.photo_profile,
+        bio: user.bio,
+        followersCount: user.following.length,
+        followingCount: user.followers.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get profile by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get profile",
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /auth/search-users:
+ *   get:
+ *     summary: Search users
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *         description: Search query for username or full_Name
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ */
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        data: [],
+      });
+      return;
+    }
+    const query = (req.query.query as string)?.trim();
+
+    const users = await prisma.users.findMany({
+      where: {
+        AND: [
+          {
+            id: {
+              not: req.user.id,
+            },
+          },
+          {
+            OR: [
+              {
+                username: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              },
+              {
+                full_Name: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        username: true,
+        full_Name: true,
+        photo_profile: true,
+        bio: true,
+      },
+      take: 5,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get users",
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /auth/profile:
+ *   put:
+ *     summary: Edit user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               full_Name:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Unauthorized
+ */
 export const editProfile = async (
   req: Request,
   res: Response,
@@ -302,6 +556,29 @@ export const editProfile = async (
   }
 };
 
+/**
+ * @swagger
+ * /auth/follows:
+ *   get:
+ *     summary: Get followers or following
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [followers, following]
+ *     responses:
+ *       200:
+ *         description: Success
+ *       400:
+ *         description: Invalid type
+ *       401:
+ *         description: Unauthorized
+ */
 export const getFollows = async (
   req: Request,
   res: Response,
@@ -373,7 +650,6 @@ export const getFollows = async (
       success: true,
       data,
     });
-    
   } catch (error) {
     console.error("Get follows error:", error);
 

@@ -2,6 +2,36 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { broadcast, sendToUser } from "../lib/websocket";
 
+/**
+ * @swagger
+ * /threads:
+ *   post:
+ *     summary: Create a new thread
+ *     tags: [Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Thread created successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ */
 export const createThread = async (
   req: Request,
   res: Response,
@@ -73,6 +103,42 @@ export const createThread = async (
   }
 };
 
+/**
+ * @swagger
+ * /threads/{threadId}/replies:
+ *   post:
+ *     summary: Create a reply for a thread
+ *     tags: [Replies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Reply created successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ */
 export const createReply = async (
   req: Request,
   res: Response,
@@ -139,6 +205,19 @@ export const createReply = async (
     console.log("REPLIER:", req.user.id);
     if (thread && thread.user.id !== req.user.id) {
       console.log("Sending new_reply event to user ID:", thread.user.id);
+      
+      const newNotification = await prisma.notifications.create({
+        data: {
+          receiverId: thread.user.id,
+          senderId: req.user.id,
+          type: "REPLY",
+          threadId: threadId,
+        },
+        include: {
+          sender: { select: { id: true, username: true, full_Name: true, photo_profile: true } }
+        }
+      });
+
       sendToUser(thread.user.id, "new_reply", {
         threadId,
         replier: {
@@ -149,6 +228,7 @@ export const createReply = async (
           photo_profile: newReply.user.photo_profile,
         },
         content: newReply.content,
+        notification: newNotification
       });
     }
 

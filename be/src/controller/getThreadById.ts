@@ -1,10 +1,32 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
-export default async function getThreadById(
+/**
+ * @swagger
+ * /threads/{threadId}:
+ *   get:
+ *     summary: Get thread by ID
+ *     tags: [Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Thread not found
+ */
+export const getThreadById = async (
   req: Request,
-  res: Response,
-): Promise<void> {
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -71,3 +93,48 @@ export default async function getThreadById(
     });
   }
 }
+
+export const getThreadsByUserId = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.id);
+    const currentUserId = req.user?.id;
+
+    const threads = await prisma.threads.findMany({
+      where: { userId },
+      include: {
+        user: true,
+        likes: true,
+        replies: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const formattedThreads = threads.map((thread) => ({
+      id: thread.id,
+      content: thread.content,
+      image: thread.image,
+      createdAt: thread.createdAt,
+      user: {
+        id: thread.user.id,
+        username: thread.user.username,
+        full_Name: thread.user.full_Name,
+        photo_profile: thread.user.photo_profile,
+      },
+      like: thread.likes.length,
+      isLiked: currentUserId
+        ? thread.likes.some((l) => l.userId === currentUserId)
+        : false,
+      replies: thread.replies.length,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedThreads,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed get user threads",
+    });
+  }
+};

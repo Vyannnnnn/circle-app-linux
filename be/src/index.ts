@@ -16,6 +16,9 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+import { setupSwagger } from "./swagger";
+setupSwagger(app);
+
 app.use("/", mainRoute);
 
 app.get("/", (req, res) => {
