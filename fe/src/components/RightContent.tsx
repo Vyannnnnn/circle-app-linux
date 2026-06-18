@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useLocation } from "react-router";
 import { getImageUrl } from "@/services/api";
+import { useMatch } from "react-router";
 
 export default function RightContent() {
   const dispatch = useAppDispatch();
@@ -19,6 +20,8 @@ export default function RightContent() {
   const [debounced, setDebounced] = useState("");
   const location = useLocation();
   const [followingUsers, setFollowingUsers] = useState<number[]>([]);
+  const isProfilePage = useMatch("/profile");
+  const isUserThreadsPage = useMatch("/threads/user/:id");
 
   useEffect(() => {
     dispatch(getSuggestions());
@@ -102,7 +105,7 @@ export default function RightContent() {
           )}
         </div>
       </div>
-     {(location.pathname === "/profile" || location.pathname === "/threads/user/:id") && <CardProfile />}
+      {(!isProfilePage && !isUserThreadsPage) && <CardProfile />}
 
       {/* Who to follow */}
       <div className="bg-[#16181c] rounded-2xl p-4 border border-[#484e52]">
